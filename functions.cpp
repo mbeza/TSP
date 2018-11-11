@@ -95,11 +95,11 @@ int* branchAndBound(MatrixGraph & graph)
 	}
 
 
-	int lowerLimit = 0;
+	
 	time.timerStart();
 	while (activeNumOfVertex >= 2)
 	{
-		for (int i = 0; i < numOfVertex; ++i)
+		for (int i = 0; i < numOfVertex; ++i)	//szukamy minimum w wierszach
 		{
 			for (int j = 0; j < numOfVertex; ++j)
 			{
@@ -107,7 +107,7 @@ int* branchAndBound(MatrixGraph & graph)
 			}
 		}
 
-		for (int i = 0; i < numOfVertex; ++i)
+		for (int i = 0; i < numOfVertex; ++i)	//odejmujemy znalezione minimum z od kazdego elementu w wierszach
 		{
 			for (int j = 0; j < numOfVertex; ++j)
 			{
@@ -118,7 +118,7 @@ int* branchAndBound(MatrixGraph & graph)
 
 		
 
-		for (int i = 0; i < numOfVertex; ++i)
+		for (int i = 0; i < numOfVertex; ++i)	//szukamy minimum w kolumnach
 		{
 			for (int j = 0; j < numOfVertex; ++j)
 			{
@@ -126,7 +126,7 @@ int* branchAndBound(MatrixGraph & graph)
 			}
 		}
 
-		for (int i = 0; i < numOfVertex; ++i)
+		for (int i = 0; i < numOfVertex; ++i)	//odejmujemy minimum z kolumn
 		{
 			for (int j = 0; j < numOfVertex; ++j)
 			{
@@ -150,37 +150,37 @@ int* branchAndBound(MatrixGraph & graph)
 			minColumn = 2147483111;
 			countZeroRow = 0;
 			countZeroColumn = 0;
-			for (int j = 0; j < numOfVertex; ++j)
+			for (int j = 0; j < numOfVertex; ++j)	
 			{
-				if (Matrix[i][j] == 0) countZeroRow++;
+				if (Matrix[i][j] == 0) countZeroRow++; //liczymy ile zer jest w danym wierszu
 				else
 				{
-					if (Matrix[i][j] != -1 && Matrix[i][j] < minRow) minRow = Matrix[i][j];
+					if (Matrix[i][j] != -1 && Matrix[i][j] < minRow) minRow = Matrix[i][j];	//jeœli to nie jest zero, a jest mniejszy ni¿ najmniejszy element minRow, to wstawiamy go jako minimum
 				}
 
-				if (Matrix[j][i] == 0) countZeroColumn++;
+				if (Matrix[j][i] == 0) countZeroColumn++;	//liczymy ile zer w kolumnie
 				else
 				{
-					if (Matrix[j][i] != -1 && Matrix[j][i] < minColumn) minColumn = Matrix[j][i];
+					if (Matrix[j][i] != -1 && Matrix[j][i] < minColumn) minColumn = Matrix[j][i]; //analogicznie
 				}
 			}
 
-			if (activeRow[i])
+			if (activeRow[i])	//jesli wiersz nie jest usuniety
 			{
-				if (countZeroRow > 1) Matrix[i][numOfVertex] = 0;
+				if (countZeroRow > 1) Matrix[i][numOfVertex] = 0;	//sprawdzamy czy sa co najmneij dwa zera, jesli tak to minimum w wierszu jest 0
 				else
 				{
-					Matrix[i][numOfVertex] = minRow;
-					if (minRow >= maxElem)
+					Matrix[i][numOfVertex] = minRow; 
+					if (minRow >= maxElem)		//jesli mniej niz 2 zera, to jako najwieksze minimum oznaczamy najmniejszy element z wiersza, poza zerem
 					{
-						maxElem = minRow;
-						row = i;
-						column = -1;
+						maxElem = minRow;	
+						row = i;			//tutaj zaznaczamy, ze wybieramy wiersz do usuniecia
+						column = -1;		//znak, ze wybralismy wiersz, bo do kolumny wstawiamy -1
 					}
 				}
 			}
 
-			if (activeColumn[i])
+			if (activeColumn[i])	//ten sam przypadek z kolumna
 			{
 				if (countZeroColumn > 1) Matrix[numOfVertex][i] = 0;
 				else
@@ -189,8 +189,8 @@ int* branchAndBound(MatrixGraph & graph)
 					if (minColumn >= maxElem)
 					{
 						maxElem = minColumn;
-						column = i;
-						row = -1;
+						column = i;		//jesli wybralismy kolumne to wstawiamy jej numer
+						row = -1;		//i ustawiamy ze nie wybralismy wiersza
 					}
 				}
 			}
@@ -200,33 +200,33 @@ int* branchAndBound(MatrixGraph & graph)
 
 		
 
-		if (row < 0)
+		if (row < 0)	//jesli wybralismy kolumne, czyli row==-1
 		{
 			for (int i = 0; i < numOfVertex; ++i)
 			{
-				if (Matrix[i][column] == 0) row = i;
+				if (Matrix[i][column] == 0) row = i; //to szukamy do niej wiersza, w ktorym na przecieciu z kolumna ma 0
 			}
 		}
-		else
+		else //gdy wybralismy wiersz
 		{
 			for (int i = 0; i < numOfVertex; ++i)
 			{
-				if (Matrix[row][i] == 0) column = i;
+				if (Matrix[row][i] == 0) column = i;	// to szukamy do niej kolumny
 			}
 		}
 
 	
 
 
-		if (activeRow[column] && activeColumn[row]) Matrix[column][row] = 2147483111;
+		if (activeRow[column] && activeColumn[row]) Matrix[column][row] = 2147483111; //blokujemy element "symetryczny"
 
 		activeColumn[column] = false;
 		activeRow[row] = false;
-		result[row] = column;
+		result[row] = column; //do wyniku dajemy usuniety element
 
 		
 
-		for (int i = 0; i < numOfVertex; ++i)
+		for (int i = 0; i < numOfVertex; ++i) //usuwamy wiersz lub kolumne
 		{
 			Matrix[row][i] = -1;
 			Matrix[i][column] = -1;
