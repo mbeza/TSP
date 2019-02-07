@@ -4,8 +4,6 @@
 using namespace std;
 
 
-
-
 int* bruteForce(MatrixGraph & graph)
 {
 	double czas;
@@ -53,13 +51,15 @@ int* bruteForce(MatrixGraph & graph)
 	return resultArray;
 }
 
-
 int* branchAndBound(MatrixGraph & graph)
 {
 	cout << "\nBRANCH AND BOUND\n";
 	double czas;
 	Timer time;
 	int numOfVertex = graph.getNumOfVertex();
+	int minTotalCost = 2147483111;
+
+	stack <Variant> variants;
 	
 	int **Matrix = new int *[numOfVertex + 1]; //tworzymy macierz o wielkosci (n+1)x(n+1)
 	
@@ -94,7 +94,11 @@ int* branchAndBound(MatrixGraph & graph)
 		activeRow[i] = true;
 	}
 
-
+	int countMax;
+	int maxElem;
+	int row;
+	int column;
+	int countEqualsMax;
 	
 	time.timerStart();
 	while (activeNumOfVertex >= 2)
@@ -140,14 +144,16 @@ int* branchAndBound(MatrixGraph & graph)
 		int minColumn;
 		int countZeroRow;
 		int countZeroColumn;
-		int maxElem = -2;
-		int row = -1;
-		int column = -1;
+		maxElem = -2;
+		row = -1;
+		column = -1;
+		countMax = 0;
+		countEqualsMax = 0;
 
 		for (int i = 0; i < numOfVertex; ++i)
 		{
-			minRow = 2147483111;
-			minColumn = 2147483111;
+			minRow = 2147480111;
+			minColumn = 2147480111;
 			countZeroRow = 0;
 			countZeroColumn = 0;
 			for (int j = 0; j < numOfVertex; ++j)	
@@ -165,32 +171,138 @@ int* branchAndBound(MatrixGraph & graph)
 				}
 			}
 
+
 			if (activeRow[i])	//jesli wiersz nie jest usuniety
 			{
-				if (countZeroRow > 1) Matrix[i][numOfVertex] = 0;	//sprawdzamy czy sa co najmneij dwa zera, jesli tak to minimum w wierszu jest 0
+				if (countZeroRow > 1)
+				{
+					Matrix[i][numOfVertex] = 0;	//sprawdzamy czy sa co najmneij dwa zera, jesli tak to minimum w wierszu jest 0
+					minRow = 0;
+					if (minRow >= maxElem)		//jesli mniej niz 2 zera, to jako najwieksze minimum oznaczamy najmniejszy element z wiersza, poza zerem
+					{
+						if (minRow == maxElem && minRow < 2147380111)
+						{
+							Variant var;
+							var.Copy(Matrix, result, numOfVertex, row, column, activeNumOfVertex, activeRow, activeColumn);
+							variants.push(var);
+								cout << "\n dorzucam na stos " << maxElem<<" z wiersza\n";
+							maxElem = minRow;
+							row = i;			//tutaj zaznaczamy, ze wybieramy wiersz do usuniecia
+							column = -1;		//znak, ze wybralismy wiersz, bo do kolumny wstawiamy -1
+						//	countEqualsMax++;
+
+						}
+						else
+						{
+							maxElem = minRow;
+							row = i;			//tutaj zaznaczamy, ze wybieramy wiersz do usuniecia
+							column = -1;		//znak, ze wybralismy wiersz, bo do kolumny wstawiamy -1
+
+							while (countEqualsMax > 0)
+							{
+								variants.pop();
+								countEqualsMax--;
+							}
+						}
+
+					}
+				}
 				else
 				{
 					Matrix[i][numOfVertex] = minRow; 
 					if (minRow >= maxElem)		//jesli mniej niz 2 zera, to jako najwieksze minimum oznaczamy najmniejszy element z wiersza, poza zerem
 					{
-						maxElem = minRow;	
-						row = i;			//tutaj zaznaczamy, ze wybieramy wiersz do usuniecia
-						column = -1;		//znak, ze wybralismy wiersz, bo do kolumny wstawiamy -1
+						if (minRow == maxElem && minRow < 2147380111)
+						{
+							Variant var;
+							var.Copy(Matrix,result,numOfVertex,row,column,activeNumOfVertex,activeRow,activeColumn);
+							variants.push(var);
+							cout << "\n dorzucam na stos " << maxElem<<" z wiersza\n";
+							maxElem = minRow;
+							row = i;			//tutaj zaznaczamy, ze wybieramy wiersz do usuniecia
+							column = -1;		//znak, ze wybralismy wiersz, bo do kolumny wstawiamy -1
+						//	countEqualsMax++;
+
+						}
+						else
+						{
+							maxElem = minRow;
+							row = i;			//tutaj zaznaczamy, ze wybieramy wiersz do usuniecia
+							column = -1;		//znak, ze wybralismy wiersz, bo do kolumny wstawiamy -1
+
+							while (countEqualsMax > 0)
+							{
+								variants.pop();
+								countEqualsMax--;
+							}
+						}
+
 					}
 				}
 			}
 
 			if (activeColumn[i])	//ten sam przypadek z kolumna
 			{
-				if (countZeroColumn > 1) Matrix[numOfVertex][i] = 0;
+				if (countZeroColumn > 1)
+				{
+					Matrix[numOfVertex][i] = 0;
+					minColumn = 0;
+					if (minColumn >= maxElem)
+					{
+						if (minColumn == maxElem && minColumn < 2147380111)
+						{
+							Variant var;
+							var.Copy(Matrix, result, numOfVertex, row, column, activeNumOfVertex, activeRow, activeColumn);
+							variants.push(var);
+							cout << "\n dorzucam na stos " << maxElem <<" z kolumny\n";
+							maxElem = minColumn;
+							column = i;		//jesli wybralismy kolumne to wstawiamy jej numer
+							row = -1;		//i ustawiamy ze nie wybralismy wiersza
+						//	countEqualsMax++;
+						}
+						else
+						{
+							maxElem = minColumn;
+							column = i;		//jesli wybralismy kolumne to wstawiamy jej numer
+							row = -1;		//i ustawiamy ze nie wybralismy wiersza
+							while (countEqualsMax > 0)
+							{
+								variants.pop();
+								countEqualsMax--;
+							}
+						}
+
+					}
+				}
+				
 				else
 				{
 					Matrix[numOfVertex][i] = minColumn;
 					if (minColumn >= maxElem)
 					{
-						maxElem = minColumn;
-						column = i;		//jesli wybralismy kolumne to wstawiamy jej numer
-						row = -1;		//i ustawiamy ze nie wybralismy wiersza
+						if (minColumn == maxElem && minColumn < 2147380111)
+						{
+							Variant var;
+							var.Copy(Matrix, result, numOfVertex, row, column, activeNumOfVertex, activeRow, activeColumn);
+							variants.push(var);
+							cout << "\n dorzucam na stos " << maxElem <<" z kolumny\n";
+							maxElem = minColumn;
+							column = i;		//jesli wybralismy kolumne to wstawiamy jej numer
+							row = -1;		//i ustawiamy ze nie wybralismy wiersza
+						//	countEqualsMax++;
+						}
+						else
+						{
+							maxElem = minColumn;
+							column = i;		//jesli wybralismy kolumne to wstawiamy jej numer
+							row = -1;		//i ustawiamy ze nie wybralismy wiersza
+							while (countEqualsMax > 0)
+							{
+								variants.pop();
+								countEqualsMax--;
+							}
+						}
+
 					}
 				}
 			}
@@ -198,7 +310,54 @@ int* branchAndBound(MatrixGraph & graph)
 
 		}
 
-		
+		//cout << endl;
+		//for (int i = 0; i <= numOfVertex; ++i)
+		//{
+		//	for (int j = 0; j <= numOfVertex; ++j)
+		//	{
+		//		if (Matrix[i][j] > 2147380111)
+		//		{
+		//			cout << setw(3) << " # ";
+		//		}
+		//		else
+		//		{
+		//			cout << setw(3) << Matrix[i][j] << " ";
+		//		}
+
+		//	}
+		//	cout << endl;
+		//}
+		//cout << endl<<" "<<maxElem<<endl;
+
+
+
+		if (false) //miejsce do którego wraca algorytm, gdy s¹ rozwa¿ane inne drogi
+		{
+		nextvariant:
+			Variant newvar;
+			newvar = variants.top();
+			variants.pop();
+			activeNumOfVertex = newvar.activeNumOfVertex;
+			numOfVertex = newvar.numOfVertex;
+			row = newvar.row;
+			column = newvar.column;
+
+			for (int i = 0; i <= numOfVertex; ++i)
+			{
+				for (int j = 0; j <= numOfVertex; ++j)
+				{
+					Matrix[i][j] = newvar.Matrix[i][j];
+				}
+			}
+
+			for (int i = 0; i < numOfVertex; ++i)
+			{
+				result[i] = newvar.result[i];
+				activeColumn[i] = newvar.activeColumn[i];
+				activeRow[i] = newvar.activeRow[i];
+			}
+			
+		}
 
 		if (row < 0)	//jesli wybralismy kolumne, czyli row==-1
 		{
@@ -215,29 +374,48 @@ int* branchAndBound(MatrixGraph & graph)
 			}
 		}
 
-	
+		//cout << column << " " << row << endl;
+			if (activeRow[column] && activeColumn[row]) Matrix[column][row] = 2147483111; //blokujemy element "symetryczny"
 
 
-		if (activeRow[column] && activeColumn[row]) Matrix[column][row] = 2147483111; //blokujemy element "symetryczny"
 
-		activeColumn[column] = false;
-		activeRow[row] = false;
-		result[row] = column; //do wyniku dajemy usuniety element
+			activeColumn[column] = false;
+			activeRow[row] = false;
+			result[row] = column; //do wyniku dajemy usuniety element
+			cout << "usuwamy " << row << " " << column << endl;
 
+
+
+			for (int i = 0; i < numOfVertex; ++i) //usuwamy wiersz lub kolumne
+			{
+				Matrix[row][i] = -1;
+				Matrix[i][column] = -1;
+				Matrix[i][numOfVertex] = 2147483111;
+				Matrix[numOfVertex][i] = 2147483111;
+			}
+
+
+			activeNumOfVertex--;
 		
-
-		for (int i = 0; i < numOfVertex; ++i) //usuwamy wiersz lub kolumne
-		{
-			Matrix[row][i] = -1;
-			Matrix[i][column] = -1;
-			Matrix[i][numOfVertex] = 2147483111;
-			Matrix[numOfVertex][i] = 2147483111;
-		}
-
-
-		activeNumOfVertex--;
-
 	}
+
+	//cout << endl;
+	//for (int i = 0; i <= numOfVertex; ++i)
+	//{
+	//	for (int j = 0; j <= numOfVertex; ++j)
+	//	{
+	//		if (Matrix[i][j] > 2147380111)
+	//		{
+	//			cout << setw(3) << " # ";
+	//		}
+	//		else
+	//		{
+	//			cout << setw(3) << Matrix[i][j] << " ";
+	//		}
+
+	//	}
+	//	cout << endl;
+	//}
 
 	int lastRow;
 	int lastColumn;
@@ -250,10 +428,6 @@ int* branchAndBound(MatrixGraph & graph)
 
 	result[lastRow] = lastColumn;
 
-	time.timerStop();
-
-	czas = time.calculateTime() / (1000000.0);
-	cout <<"czas "<< czas << endl;
 
 	int *resultab = new int[numOfVertex + 2];
 	int resultiter = 1;
@@ -272,9 +446,222 @@ int* branchAndBound(MatrixGraph & graph)
 		iterator--;
 		resultiter++;
 	}
+	//cout <<endl<< variants.size()<<endl;
+	if (totalCost < minTotalCost)
+		minTotalCost = totalCost;
+	if (!variants.empty())
+		goto nextvariant;
 
-	resultab[resultiter] = totalCost;
+	resultab[resultiter] = minTotalCost;
+	time.timerStop();
+
+	czas = time.calculateTime() / (1000000.0);
+	cout << "czas " << czas << endl;
+
 
 	return resultab;
 
+}
+
+int* simulatedAnnealing(MatrixGraph & graph, int mode, double Tstart, double deltaT, double* time, int* totalcost)
+{
+	int numOfVertex = graph.getNumOfVertex();
+	int *resultArray = new int[numOfVertex];
+
+	int *actualPermutation = new int[numOfVertex];
+	int *previousPermutation;
+	int* bestPermutation = new int[numOfVertex];
+
+	int actualCost;
+	int prevCost;
+
+	int* actualCostPtr = &actualCost;
+	int* prevCostPtr = &prevCost;
+
+	int bestCost;
+
+	Timer countedTime;
+	countedTime.timerStart();
+
+	previousPermutation = startPermutation(graph, mode); //pocz¹tkowe rozwi¹zanie
+	bestCost = getCost(graph, previousPermutation);
+
+	double T = Tstart;
+
+	while (T > 0.0001)
+	{
+		//cout << T << endl;
+		for (int i = 0; i < numOfVertex; ++i)
+		{
+			actualPermutation[i] = previousPermutation[i];	//jako aktualne rozwi¹zanie ustawiamy poprzednie rozwi¹zanie
+		}
+
+		int candidate1 = rand() % numOfVertex;
+		int candidate2;
+		do
+		{
+			candidate2 = rand() % numOfVertex;	//losujemy elementy do zmiany
+		} while (candidate1 == candidate2);
+
+		swap(actualPermutation[candidate1], actualPermutation[candidate2]); //zmieniamy dwa losowe elementy
+
+		if (checkCost(graph, actualPermutation, previousPermutation, actualCostPtr, prevCostPtr))	//sprawdzamy, czy koszt aktualnej permutacji(tej po swap) jest mniejszy ni¿ poprzedniej
+		{
+			for (int i = 0; i < numOfVertex; ++i)	//jesli jest mniejszy, to zamieniamy nasze poprzednie rozwi¹zanie na to, które analizujemy
+			{
+				previousPermutation[i] = actualPermutation[i];
+			}
+
+			int tmpcost = getCost(graph, previousPermutation);
+			if (tmpcost < bestCost)
+			{
+				bestCost = tmpcost;
+				for (int i = 0; i < numOfVertex; ++i)
+				{
+					bestPermutation[i] = previousPermutation[i];	//jako najlepsze rozwi¹zanie ustawiamy aktualne rozwi¹zanie
+				}
+			}
+
+		}
+		else
+		{
+			double rnd = (double)rand() / RAND_MAX;		//jesli nie jest, to losujemy liczbe z przedzialu (0,1)
+
+			if (rnd < P(T, actualCost, prevCost))		//i sprawdzamy czy jest mniejsza od prawdopodobienstwa P
+			{
+				for (int i = 0; i < numOfVertex; ++i)	//jesli jest mniejsza, to zamieniamy nasze poprzednie rozwi¹zanie na to, które analizujemy
+				{
+					previousPermutation[i] = actualPermutation[i];
+				}										//a jesli nie jest, to nie zamieniamy naszego poprzedniego rozwiazania, zeby moc sie do niego cofnac i wygenerowac inny ruch
+			}
+
+		}
+		T *= deltaT;
+	}
+	countedTime.timerStop();
+
+	*time = countedTime.calculateTime() / (1000000.0);
+	*totalcost = bestCost;
+
+	return bestPermutation;
+}
+
+bool checkCost(MatrixGraph & graph, int *tab1, int* tab2, int* actual, int* prev)
+{
+	int numOfVertex = graph.getNumOfVertex();
+
+	int cost1 = 0, cost2 = 0;
+
+	for (int i = 0; i < numOfVertex - 1; ++i)
+	{
+		cost1 += graph.getCost(tab1[i], tab1[i + 1]);
+		cost2 += graph.getCost(tab2[i], tab2[i + 1]);
+	}
+
+	cost1 += graph.getCost(tab1[numOfVertex - 1], tab1[0]);
+	cost2 += graph.getCost(tab2[numOfVertex - 1], tab2[0]);
+
+
+	*actual = cost1;
+	*prev = cost2;
+
+	if (cost1 < cost2) return true;
+	else return false;
+
+}
+
+int* startPermutation(MatrixGraph &graph, int mode)
+{
+	int numOfVertex = graph.getNumOfVertex();
+	int* permutation = new int[numOfVertex];
+
+	if (mode == 1) //simply 0,1,2,3,...,n
+	{
+		for (int i = 0; i < numOfVertex; ++i)
+			permutation[i] = i;
+	}
+	else
+	{
+		int* numbers = new int[numOfVertex];
+		for (int i = 0; i < numOfVertex; ++i)
+			numbers[i] = i;
+
+		int existnumbers = numOfVertex;
+		int iterator = 0;
+		int randNumber;
+
+		if (mode == 2) //rand
+		{
+			while (existnumbers > 0)
+			{
+				randNumber = rand() % existnumbers;
+				permutation[iterator] = numbers[randNumber];
+				iterator++;
+				swap(numbers[randNumber], numbers[existnumbers - 1]);
+				existnumbers--;
+			}
+
+		}
+		if (mode == 3) //greedy algorithm
+		{
+			bool* isVisited = new bool[numOfVertex];
+			for (int i = 0; i < numOfVertex; ++i)
+				isVisited[i] = false;
+
+			randNumber = rand() % numOfVertex;
+			permutation[iterator] = randNumber;
+			isVisited[randNumber] = true;
+
+
+			for (int i = 0; i < numOfVertex - 1; ++i)
+			{
+				do
+				{
+					randNumber = rand() % numOfVertex;
+				} while (isVisited[randNumber]);
+
+
+				int mincost = graph.getCost(permutation[iterator], randNumber);
+				int cost;
+				int numOfElement = randNumber;
+
+				for (int j = 0; j < numOfVertex; ++j)
+				{
+					if (isVisited[j]) continue;
+					cost = graph.getCost(permutation[iterator], j);
+					if (cost < mincost)
+					{
+						mincost = cost;
+						numOfElement = j;
+					}
+				}
+				iterator++;
+				permutation[iterator] = numOfElement;
+				isVisited[numOfElement] = true;
+			}
+
+		}
+	}
+
+
+	return permutation;
+}
+
+double P(double T, double actual, double previous)
+{
+	return exp(((previous - actual) / T));
+}
+
+int getCost(MatrixGraph &graph, int* tab)
+{
+	int numOfVertex = graph.getNumOfVertex();
+	int cost = 0;
+	for (int i = 0; i < numOfVertex - 1; ++i)
+	{
+		cost += graph.getCost(tab[i], tab[i + 1]);
+	}
+
+	cost += graph.getCost(tab[numOfVertex - 1], tab[0]);
+
+	return cost;
 }
